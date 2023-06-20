@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:numberpicker/numberpicker.dart';
 import 'package:sequence_mate/features/pose/selected_pose_screen.dart';
 
 class YogaPosesScreen extends StatefulWidget {
@@ -9,6 +10,7 @@ class YogaPosesScreen extends StatefulWidget {
 }
 
 class _YogaPosesScreenState extends State<YogaPosesScreen> {
+  final int _currentValue = 30;
   List<String> yogaPoses = [
     '가루다아사나',
     '고무카아사나',
@@ -30,7 +32,8 @@ class _YogaPosesScreenState extends State<YogaPosesScreen> {
     '타다아사나',
     '윤지바보',
   ];
-  List<String> selectedPoses = [];
+
+  Map<String, int> selectedPoses = {};
 
   @override
   Widget build(BuildContext context) {
@@ -43,20 +46,58 @@ class _YogaPosesScreenState extends State<YogaPosesScreen> {
         itemBuilder: (context, index) {
           return ListTile(
             title: Text(yogaPoses[index]),
-            trailing: Icon(
-              selectedPoses.contains(yogaPoses[index])
-                  ? Icons.check_box
-                  : Icons.check_box_outline_blank,
-            ),
-            onTap: () {
-              setState(() {
-                if (selectedPoses.contains(yogaPoses[index])) {
-                  selectedPoses.remove(yogaPoses[index]);
-                } else {
-                  selectedPoses.add(yogaPoses[index]);
-                }
-              });
-            },
+            trailing: selectedPoses.containsKey(yogaPoses[index])
+                ? IconButton(
+                    icon: const Icon(Icons.timer),
+                    onPressed: () async {
+                      final TextEditingController controller =
+                          TextEditingController();
+                      await showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title:
+                                Text("Pick duration for ${yogaPoses[index]}"),
+                            content: TextFormField(
+                              controller: controller,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: "Enter time in seconds",
+                              ),
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text("Cancel"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              TextButton(
+                                child: const Text("OK"),
+                                onPressed: () {
+                                  Navigator.of(context)
+                                      .pop(int.parse(controller.text));
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      ).then((value) {
+                        if (value != null) {
+                          setState(() {
+                            selectedPoses[yogaPoses[index]] = value;
+                          });
+                        }
+                      });
+                    })
+                : IconButton(
+                    icon: const Icon(Icons.check_box_outline_blank),
+                    onPressed: () {
+                      setState(() {
+                        selectedPoses[yogaPoses[index]] = 0;
+                      });
+                    },
+                  ),
           );
         },
       ),
